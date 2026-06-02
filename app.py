@@ -8,35 +8,79 @@ from PIL import Image
 # ===============================
 st.set_page_config(
     page_title="Deteksi Nominal Uang Rupiah",
-    page_icon="💵",
+    page_icon="💸",
     layout="centered"
 )
 
 # ===============================
-# HILANGKAN ELEMEN BAWAAN STREAMLIT (Tampilan Minimalis)
+# CSS INJECTION UTK TAMPILAN PROFESIONAL & SOFT
 # ===============================
-hide_st_style = """
-            <style>
-            #MainMenu {visibility: hidden;} /* Sembunyikan menu hamburger */
-            footer {visibility: hidden;}    /* Sembunyikan footer 'Made with Streamlit' */
-            header {visibility: hidden;}    /* Sembunyikan header/garis atas */
-            
-            /* Bikin background abu-abu sangat muda dan font lebih bersih */
-            .stApp {
-                background-color: #f8fafc; 
-            }
-            
-            /* Sembunyikan batas padding atas yang terlalu lebar */
-            .block-container {
-                padding-top: 2rem;
-                padding-bottom: 2rem;
-            }
-            </style>
-            """
-st.markdown(hide_st_style, unsafe_allow_html=True)
+custom_css = """
+<style>
+    /* Import Font Modern dari Google Fonts */
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap');
+
+    /* Terapkan font ke seluruh elemen */
+    html, body, [class*="css"] {
+        font-family: 'Poppins', sans-serif;
+    }
+
+    /* Sembunyikan elemen bawaan Streamlit */
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    header {visibility: hidden;}
+
+    /* Background Aplikasi: Gradient biru sangat lembut */
+    .stApp {
+        background: linear-gradient(135deg, #f0f4f8 0%, #e2e8f0 100%);
+    }
+
+    /* Ubah kontainer utama menjadi bentuk 'Card' melayang */
+    .block-container {
+        background-color: rgba(255, 255, 255, 0.95);
+        padding: 3rem !important;
+        border-radius: 24px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+        margin-top: 3rem;
+        margin-bottom: 3rem;
+        max-width: 650px !important;
+        backdrop-filter: blur(10px);
+    }
+
+    /* Kustomisasi Area Upload File */
+    [data-testid="stFileUploadDropzone"] {
+        border: 2px dashed #cbd5e1 !important;
+        background-color: #f8fafc !important;
+        border-radius: 16px !important;
+        padding: 2rem !important;
+        transition: all 0.3s ease;
+    }
+    
+    /* Efek saat area upload di-hover */
+    [data-testid="stFileUploadDropzone"]:hover {
+        background-color: #f1f5f9 !important;
+        border-color: #94a3b8 !important;
+    }
+
+    /* Warna teks dan header */
+    h1, h2, h3, h4 {
+        color: #1e293b !important;
+    }
+    p {
+        color: #475569 !important;
+    }
+
+    /* Kustomisasi Progress Bar agar warnanya senada */
+    .stProgress > div > div > div > div {
+        background-color: #3b82f6 !important;
+        border-radius: 10px;
+    }
+</style>
+"""
+st.markdown(custom_css, unsafe_allow_html=True)
 
 # ===============================
-# LOAD MODEL DAN NAMA KELAS (Menggunakan Cache agar cepat)
+# LOAD MODEL DAN NAMA KELAS (Pakai Cache)
 # ===============================
 @st.cache_resource
 def load_model_and_classes():
@@ -60,30 +104,36 @@ def format_rupiah(nominal):
 
     try:
         angka = int(nominal)
-        return "Rp" + f"{angka:,}".replace(",", ".")
+        return "Rp " + f"{angka:,}".replace(",", ".")
     except:
         return nominal
 
 # ===============================
 # TAMPILAN WEB (UI)
 # ===============================
-# Judul menggunakan markdown agar bisa diatur posisinya di tengah
-st.markdown("<h2 style='text-align: center; color: #1e293b; margin-bottom: 0px;'>💵 Deteksi Nominal Uang Rupiah</h2>", unsafe_allow_html=True)
-st.markdown("<p style='text-align: center; color: #64748b; margin-bottom: 30px;'>Unggah gambar uang kertas untuk memulai pengenalan nominal</p>", unsafe_allow_html=True)
+# Header Web
+st.markdown("""
+    <div style='text-align: center; margin-bottom: 2rem;'>
+        <h2 style='font-weight: 600; margin-bottom: 0;'>💸 Deteksi Nominal Uang</h2>
+        <p style='font-size: 0.95rem; margin-top: 5px;'>Unggah gambar uang kertas rupiah dan biarkan AI mengenali nominalnya dengan cepat.</p>
+    </div>
+""", unsafe_allow_html=True)
 
 uploaded_file = st.file_uploader(
     "Pilih gambar uang",
     type=["jpg", "jpeg", "png"],
-    label_visibility="hidden" # Sembunyikan label bawaan agar lebih bersih
+    label_visibility="hidden"
 )
 
 if uploaded_file is not None:
     image = Image.open(uploaded_file).convert("RGB")
     
-    # Menampilkan gambar dengan sudut membulat menggunakan kolom agar rapi
-    col1, col2, col3 = st.columns([1, 4, 1])
+    # Menampilkan gambar dengan padding dan shadow agar rapi
+    st.markdown("<br>", unsafe_allow_html=True)
+    col1, col2, col3 = st.columns([0.5, 3, 0.5])
     with col2:
-        st.image(image, caption="Gambar yang diunggah", use_container_width=True)
+        st.image(image, use_container_width=True, clamp=True)
+        st.markdown("<p style='text-align:center; font-size:0.8rem; color:#94a3b8;'>Gambar yang sedang diproses</p>", unsafe_allow_html=True)
 
     # ===============================
     # PREPROCESSING GAMBAR
@@ -104,21 +154,30 @@ if uploaded_file is not None:
     # ===============================
     # HASIL PREDIKSI
     # ===============================
-    st.markdown("---")
-    st.markdown("<h4 style='text-align: center; color: #334155;'>Hasil Analisis</h4>", unsafe_allow_html=True)
+    st.markdown("<hr style='border-top: 1px dashed #cbd5e1; margin: 2rem 0;'>", unsafe_allow_html=True)
+    st.markdown("<h4 style='text-align: center; font-weight: 500; margin-bottom: 1rem;'>📊 Hasil Analisis</h4>", unsafe_allow_html=True)
 
+    # Kotak hasil prediksi yang lebih menonjol
     if confidence < 70:
-        st.warning(f"⚠️ Model belum terlalu yakin. Prediksi sementara: **{format_rupiah(predicted_class)}**")
+        st.warning(f"⚠️ **Prediksi Sementara:** {format_rupiah(predicted_class)}", icon=None)
     else:
-        st.success(f"✅ Nominal uang terdeteksi: **{format_rupiah(predicted_class)}**")
+        st.success(f"✅ **Nominal Terdeteksi:** {format_rupiah(predicted_class)}", icon=None)
 
-    # Progress bar untuk tingkat keyakinan (confidence) agar visualnya lebih menarik
-    st.write(f"**Tingkat Keyakinan (Confidence):** {confidence:.2f}%")
+    # Indikator Confidence
+    st.markdown(f"<p style='margin-bottom: 5px; font-size: 0.9rem; font-weight: 500;'>Tingkat Keyakinan: {confidence:.2f}%</p>", unsafe_allow_html=True)
     st.progress(int(confidence))
 
-    with st.expander("Lihat kemungkinan lainnya (Detail Prediksi)"):
+    st.markdown("<br>", unsafe_allow_html=True)
+    
+    # Detail Prediksi
+    with st.expander("🔍 Lihat Detail Probabilitas Kelas Lainnya"):
         top_indices = np.argsort(predictions[0])[-3:][::-1]
         for i in top_indices:
             nama_kelas = class_names[i]
             persen = predictions[0][i] * 100
-            st.write(f"- {format_rupiah(nama_kelas)}: **{persen:.2f}%**")
+            st.markdown(f"""
+                <div style='display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid #f1f5f9;'>
+                    <span style='color: #475569;'>{format_rupiah(nama_kelas)}</span>
+                    <span style='font-weight: 600; color: #1e293b;'>{persen:.2f}%</span>
+                </div>
+            """, unsafe_allow_html=True)
