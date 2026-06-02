@@ -38,7 +38,7 @@ st.set_page_config(
 )
 
 st.title("💵 Sistem Pengenalan Nominal Uang Kertas Rupiah")
-st.write("Upload gambar uang kertas Rupiah, lalu sistem akan memprediksi nominalnya.")
+st.write("Upload gambar uang kertas rupiah!")
 
 uploaded_file = st.file_uploader(
     "Upload gambar uang",
