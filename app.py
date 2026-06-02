@@ -8,7 +8,6 @@ from PIL import Image
 # ===============================
 st.set_page_config(
     page_title="Deteksi Nominal Uang Rupiah",
-    page_icon="💸",
     layout="centered"
 )
 
@@ -114,7 +113,7 @@ def format_rupiah(nominal):
 # Header Web
 st.markdown("""
     <div style='text-align: center; margin-bottom: 2rem;'>
-        <h2 style='font-weight: 600; margin-bottom: 0;'>💸 Deteksi Nominal Uang</h2>
+        <h2 style='font-weight: 600; margin-bottom: 0;'>Deteksi Nominal Uang</h2>
         <p style='font-size: 0.95rem; margin-top: 5px;'>Unggah gambar uang kertas rupiah dan biarkan AI mengenali nominalnya dengan cepat.</p>
     </div>
 """, unsafe_allow_html=True)
@@ -155,13 +154,13 @@ if uploaded_file is not None:
     # HASIL PREDIKSI
     # ===============================
     st.markdown("<hr style='border-top: 1px dashed #cbd5e1; margin: 2rem 0;'>", unsafe_allow_html=True)
-    st.markdown("<h4 style='text-align: center; font-weight: 500; margin-bottom: 1rem;'>📊 Hasil Analisis</h4>", unsafe_allow_html=True)
+    st.markdown("<h4 style='text-align: center; font-weight: 500; margin-bottom: 1rem;'>Hasil Analisis</h4>", unsafe_allow_html=True)
 
     # Kotak hasil prediksi yang lebih menonjol
     if confidence < 70:
-        st.warning(f"⚠️ **Prediksi Sementara:** {format_rupiah(predicted_class)}", icon=None)
+        st.warning(f"**Prediksi Sementara:** {format_rupiah(predicted_class)}", icon=None)
     else:
-        st.success(f"✅ **Nominal Terdeteksi:** {format_rupiah(predicted_class)}", icon=None)
+        st.success(f"**Nominal Terdeteksi:** {format_rupiah(predicted_class)}", icon=None)
 
     # Indikator Confidence
     st.markdown(f"<p style='margin-bottom: 5px; font-size: 0.9rem; font-weight: 500;'>Tingkat Keyakinan: {confidence:.2f}%</p>", unsafe_allow_html=True)
@@ -170,7 +169,7 @@ if uploaded_file is not None:
     st.markdown("<br>", unsafe_allow_html=True)
     
     # Detail Prediksi
-    with st.expander("🔍 Lihat Detail Probabilitas Kelas Lainnya"):
+    with st.expander("Lihat Detail Probabilitas Kelas Lainnya"):
         top_indices = np.argsort(predictions[0])[-3:][::-1]
         for i in top_indices:
             nama_kelas = class_names[i]
