@@ -4,12 +4,48 @@ import numpy as np
 from PIL import Image
 
 # ===============================
-# LOAD MODEL DAN NAMA KELAS
+# KONFIGURASI HALAMAN (Wajib paling atas)
 # ===============================
-model = tf.keras.models.load_model("model_uang.keras")
+st.set_page_config(
+    page_title="Deteksi Nominal Uang Rupiah",
+    page_icon="💵",
+    layout="centered"
+)
 
-with open("class_names.txt", "r") as f:
-    class_names = [line.strip() for line in f.readlines()]
+# ===============================
+# HILANGKAN ELEMEN BAWAAN STREAMLIT (Tampilan Minimalis)
+# ===============================
+hide_st_style = """
+            <style>
+            #MainMenu {visibility: hidden;} /* Sembunyikan menu hamburger */
+            footer {visibility: hidden;}    /* Sembunyikan footer 'Made with Streamlit' */
+            header {visibility: hidden;}    /* Sembunyikan header/garis atas */
+            
+            /* Bikin background abu-abu sangat muda dan font lebih bersih */
+            .stApp {
+                background-color: #f8fafc; 
+            }
+            
+            /* Sembunyikan batas padding atas yang terlalu lebar */
+            .block-container {
+                padding-top: 2rem;
+                padding-bottom: 2rem;
+            }
+            </style>
+            """
+st.markdown(hide_st_style, unsafe_allow_html=True)
+
+# ===============================
+# LOAD MODEL DAN NAMA KELAS (Menggunakan Cache agar cepat)
+# ===============================
+@st.cache_resource
+def load_model_and_classes():
+    model = tf.keras.models.load_model("model_uang.keras")
+    with open("class_names.txt", "r") as f:
+        class_names = [line.strip() for line in f.readlines()]
+    return model, class_names
+
+model, class_names = load_model_and_classes()
 
 # ===============================
 # FORMAT RUPIAH
@@ -29,26 +65,25 @@ def format_rupiah(nominal):
         return nominal
 
 # ===============================
-# TAMPILAN WEB
+# TAMPILAN WEB (UI)
 # ===============================
-st.set_page_config(
-    page_title="Deteksi Nominal Uang Rupiah",
-    page_icon="💵",
-    layout="centered"
-)
-
-st.title("💵 Sistem Pengenalan Nominal Uang Kertas Rupiah")
-st.write("Upload gambar uang kertas rupiah!")
+# Judul menggunakan markdown agar bisa diatur posisinya di tengah
+st.markdown("<h2 style='text-align: center; color: #1e293b; margin-bottom: 0px;'>💵 Deteksi Nominal Uang Rupiah</h2>", unsafe_allow_html=True)
+st.markdown("<p style='text-align: center; color: #64748b; margin-bottom: 30px;'>Unggah gambar uang kertas untuk memulai pengenalan nominal</p>", unsafe_allow_html=True)
 
 uploaded_file = st.file_uploader(
-    "Upload gambar uang",
-    type=["jpg", "jpeg", "png"]
+    "Pilih gambar uang",
+    type=["jpg", "jpeg", "png"],
+    label_visibility="hidden" # Sembunyikan label bawaan agar lebih bersih
 )
 
 if uploaded_file is not None:
     image = Image.open(uploaded_file).convert("RGB")
-
-    st.image(image, caption="Gambar Uang yang Diupload", use_container_width=True)
+    
+    # Menampilkan gambar dengan sudut membulat menggunakan kolom agar rapi
+    col1, col2, col3 = st.columns([1, 4, 1])
+    with col2:
+        st.image(image, caption="Gambar yang diunggah", use_container_width=True)
 
     # ===============================
     # PREPROCESSING GAMBAR
@@ -69,20 +104,21 @@ if uploaded_file is not None:
     # ===============================
     # HASIL PREDIKSI
     # ===============================
-    st.subheader("Hasil Prediksi")
+    st.markdown("---")
+    st.markdown("<h4 style='text-align: center; color: #334155;'>Hasil Analisis</h4>", unsafe_allow_html=True)
 
     if confidence < 70:
-        st.warning(f"Model belum terlalu yakin. Prediksi sementara: {format_rupiah(predicted_class)}")
+        st.warning(f"⚠️ Model belum terlalu yakin. Prediksi sementara: **{format_rupiah(predicted_class)}**")
     else:
-        st.success(f"Nominal uang terdeteksi: {format_rupiah(predicted_class)}")
+        st.success(f"✅ Nominal uang terdeteksi: **{format_rupiah(predicted_class)}**")
 
-    st.write(f"Tingkat keyakinan: {confidence:.2f}%")
+    # Progress bar untuk tingkat keyakinan (confidence) agar visualnya lebih menarik
+    st.write(f"**Tingkat Keyakinan (Confidence):** {confidence:.2f}%")
+    st.progress(int(confidence))
 
-    st.write("Kemungkinan lain:")
-
-    top_indices = np.argsort(predictions[0])[-3:][::-1]
-
-    for i in top_indices:
-        nama_kelas = class_names[i]
-        persen = predictions[0][i] * 100
-        st.write(f"- {format_rupiah(nama_kelas)}: {persen:.2f}%")
+    with st.expander("Lihat kemungkinan lainnya (Detail Prediksi)"):
+        top_indices = np.argsort(predictions[0])[-3:][::-1]
+        for i in top_indices:
+            nama_kelas = class_names[i]
+            persen = predictions[0][i] * 100
+            st.write(f"- {format_rupiah(nama_kelas)}: **{persen:.2f}%**")
